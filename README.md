@@ -1,297 +1,297 @@
 # Cortex: LLM External Brain
 
-**Cortex** transforma un modelo de lenguaje (LLM) sin estado en un **entorno de trabajo estructurado y persistente**: un "cerebro externo" que gestiona la memoria, el contexto, la configuración de comportamiento y el guardado, dejando que la IA se dedique a razonar.
+**Cortex** turns a raw, stateless language model into a **structured, persistent work environment** — an "external brain" that handles memory, context, behavior configuration, and saving, leaving the AI free to focus on reasoning.
 
-A diferencia de un chat tradicional, Cortex está construido para **sesiones largas y complejas**: mantiene el contexto de la conversación mediante resúmenes automáticos, guarda todo localmente en tu navegador, y se adapta a cualquier propósito — storyteller, generador de prompts, chatbot, discusión técnica, ingeniero de prompts para imágenes, etc.
+Unlike a traditional chat, Cortex is built for **long and complex sessions**: it keeps the conversation context alive through automatic summaries, saves everything locally in your browser, and adapts to any purpose — storyteller, prompt generator, chatbot, technical discussion, image-prompt engineer, and more.
 
-> 🔗 **Generador:** https://perchance.org/seven-cortex-gem-v5
-> 📂 **Repositorio / Documentación:** https://github.com/lcarrillo1969/Cortex
-
----
-
-## Índice
-
-1. [Primeros pasos](#1-primeros-pasos)
-2. [La interfaz](#2-la-interfaz)
-3. [Agentes y Absolute Premises (el corazón de Cortex)](#3-agentes-y-absolute-premises)
-4. [IMAGINER: generación de imágenes y prompts visuales](#4-imaginer-generación-de-imágenes-y-prompts-visuales)
-5. [Gestión de memoria: el Termómetro y el Resumen Ejecutivo](#5-gestión-de-memoria)
-6. [Sesiones: guardado, recuperación y compartir](#6-sesiones)
-7. [Session Archive: la conversación tal como sucedió](#7-session-archive)
-8. [Scratchpad (privado)](#8-scratchpad-privado)
-9. [Configuración (⚙️)](#9-configuración)
-10. [Preguntas frecuentes](#10-preguntas-frecuentes)
-11. [Arquitectura técnica (para desarrolladores)](#11-arquitectura-técnica)
+> 🔗 **Generator:** https://perchance.org/seven-cortex-gem-v5
+> 📂 **Repository / Documentation:** https://github.com/lcarrillo1969/Cortex
 
 ---
 
-## 1. Primeros pasos
+## Table of Contents
 
-Abre el generador. **No necesitas configurar nada** para empezar: Cortex viene con un agente por defecto — un asistente general, directo y útil.
-
-1. Escribe tu mensaje en la caja de texto de la parte inferior.
-2. Pulsa **Send** (o `Enter`). Usa `Shift + Enter` para saltos de línea.
-3. A partir del primer mensaje se crea automáticamente una **sesión** (sin botón de guardar: todo se autoguarda).
-
-Todo lo que escribas, cada respuesta de la IA y cada resumen de memoria se guarda solo en tu navegador (IndexedDB). Puedes cerrar la pestaña y retomar donde lo dejaste.
+1. [Getting Started](#1-getting-started)
+2. [The Interface](#2-the-interface)
+3. [Agents & Absolute Premises (the heart of Cortex)](#3-agents--absolute-premises)
+4. [IMAGINER: image generation & visual prompts](#4-imaginer-image-generation--visual-prompts)
+5. [Memory management: the Thermometer & the Executive Summary](#5-memory-management)
+6. [Sessions: saving, recovering & sharing](#6-sessions)
+7. [Session Archive: the conversation exactly as it happened](#7-session-archive)
+8. [Scratchpad (private)](#8-scratchpad-private)
+9. [Settings (⚙️)](#9-settings)
+10. [FAQ](#10-faq)
+11. [Technical architecture (for developers)](#11-technical-architecture)
 
 ---
 
-## 2. La interfaz
+## 1. Getting Started
 
-Cortex divide la pantalla en dos áreas:
+Open the generator. **You don't need to configure anything** to start: Cortex ships with a default agent — a direct, helpful general-purpose assistant.
 
-### 🖥️ Canvas principal (izquierda)
-El chat: historial de mensajes, streaming de respuestas en tiempo real y la caja de entrada.
+1. Type your message in the input box at the bottom.
+2. Hit **Send** (or press `Enter`). Use `Shift + Enter` for line breaks.
+3. The moment you send your first message, a **session** is created automatically (there's no Save button: everything autosaves).
 
-### 🧠 External Brain (derecha)
-El panel de control modular. Contiene, de arriba a abajo:
+Everything you type, every AI response, and every memory summary is saved automatically in your browser (IndexedDB). You can close the tab and pick up right where you left off.
 
-| Módulo | Función |
+---
+
+## 2. The Interface
+
+Cortex splits the screen into two functional areas:
+
+### 🖥️ Main canvas (left)
+The chat: message history, real-time streaming of responses, and the input box.
+
+### 🧠 External Brain (right)
+The modular control panel. From top to bottom:
+
+| Module | Purpose |
 |---|---|
-| **Sesiones** | Nueva, importar, lista de conversaciones, renombrar, exportar, compartir, eliminar |
-| **1. Absolute Premises** | La "ley" que define quién es la IA y cómo responde |
-| **1.5 IMAGINER** | El rol visual que convierte el contexto en prompts para imágenes |
-| **2. Executive Summary** | La memoria comprimida de la conversación (editable) |
-| **Session Archive** | Copia fiel y numerada de cada respuesta, tal como se generó |
-| **3. Scratchpad (Private)** | Notas personales que **nunca** se envían a la IA |
+| **Sessions** | New, import, conversation list, rename, export, share, delete |
+| **1. Absolute Premises** | The "law" that defines who the AI is and how it responds |
+| **1.5 IMAGINER** | The visual role that turns context into image prompts |
+| **2. Executive Summary** | The compressed memory of the conversation (editable) |
+| **Session Archive** | A faithful, numbered copy of every response, exactly as generated |
+| **3. Scratchpad (Private)** | Personal notes that are **never** sent to the AI |
 
-### 📐 Panel retráctil
-El botón **▸ / ◂** en el borde superior derecho colapsa o expande el External Brain para que el canvas principal ocupe todo el ancho. El estado se recuerda entre visitas.
+### 📐 Retractable panel
+The **▸ / ◂** button on the top-right edge collapses or expands the External Brain so the main canvas takes the full width. The state is remembered between visits.
 
-### Barra superior
-- **Termómetro de memoria** — uso del contexto en tiempo real.
-- **📖 Docs** — abre esta misma documentación (se descarga en vivo desde GitHub).
-- **⚙️ Settings** — configuración del sistema.
-
----
-
-## 3. Agentes y Absolute Premises
-
-### ¿Qué es un Agente?
-
-Un **Agente** es una configuración de comportamiento guardada: un conjunto de reglas (la *Absolute Premise*) que le dice a la IA quién es, cómo piensa y en qué formato responde. Cuando guardas una premisa como plantilla, estás creando un **agente reutilizable**.
-
-El término correcto en Cortex es **Agente**: cada plantilla guardada es un "especialista" que puedes invocar con un clic. La app muestra el nombre del agente activo junto al título de los módulos *1. Absolute Premises* y *1.5 IMAGINER* (por defecto: `Cortex` e `IMAGINER`; si editas el texto sin guardarlo como plantilla, aparece como `Custom`).
-
-### La Absolute Premise es ley inquebrantable
-
-Todo lo que escribas en la caja *1. Absolute Premises* es la directiva de más alta prioridad para el modelo: se lee **primero, en cada turno**. Define roles, formato estricto, tono, restricciones absolutas, etc.
-
-El cambio es **inmediato**: en cada `Send`, Cortex lee la caja en ese instante. Puedes cambiar de personalidad a mitad de una charla sin perder la memoria de la sesión — la IA recuerda todo lo hablado, pero responde bajo las nuevas reglas.
-
-### El Gestor de Plantillas (🗂️) — tu biblioteca de agentes
-
-El botón **🗂️** junto al título del módulo abre el gestor:
-
-- **💾 Save current** — guarda la premisa actual como un agente con nombre.
-- **Usar** — carga un agente guardado en la caja al instante.
-- **🔎 Search** y filtros **All / Absolute Premises / IMAGINER**.
-- **⬇️ Export** — descarga todos tus agentes como JSON (copia de seguridad / migración).
-- **📂 Import** — importa un archivo JSON de agentes (detecta automáticamente si el archivo es de sesiones o de plantillas).
-- **✏️ Edit / 🗑️ Delete** — editar o eliminar un agente guardado.
-
-> **Consejo de flujo:** construye una premisa, pruébala, y cuando consigas el comportamiento ideal guárdala. Con el tiempo acumulas un equipo de especialistas a la carta: tu traductor estricto, tu ingeniero de prompts, tu novelista, tu revisor de código… todos a un clic.
-
-### Nuevo *manteniendo* el agente
-
-El botón **🔄** junto al título de *Absolute Premises* crea una sesión nueva en blanco **conservando exactamente** la premisa actual. Útil para empezar un tema nuevo con el mismo agente, sin perder la personalidad. (El botón **✨ New** del módulo de sesiones, en cambio, restaura la premisa por defecto.)
+### Top bar
+- **Memory Thermometer** — real-time context usage.
+- **📖 Docs** — opens this very documentation (fetched live from GitHub).
+- **⚙️ Settings** — system configuration.
 
 ---
 
-## 4. IMAGINER: generación de imágenes y prompts visuales
+## 3. Agents & Absolute Premises
 
-Cortex incluye un módulo de imagen para **probar prompts**, **construir prompts a partir del contexto de la conversación** y **generar imágenes** — todo sin salir del chat.
+### What is an Agent?
 
-### El rol IMAGINER (módulo 1.5)
+An **Agent** is a saved behavior configuration: a set of rules (the *Absolute Premise*) that tells the AI who it is, how it thinks, and in what format it responds. When you save a premise as a template, you're creating a **reusable agent**.
 
-Es un **rol visual paralelo**: su texto define cómo se convierte el contexto del chat en un prompt de imagen (estilo, iluminación, composición, idioma del prompt, etc.). Por defecto es *"You are IMAGINER, a visual prompt creator…"*, y puedes editarlo para cambiar el estilo de imagen. Clave:
+In Cortex the correct term is **Agent**: each saved template is a "specialist" you can summon with one click. The app shows the active agent's name next to the module titles *1. Absolute Premises* and *1.5 IMAGINER* (by default: `Cortex` and `IMAGINER`; if you edit the text without saving it as a template, it shows as `Custom`).
 
-- Es un **camino paralelo**: no se envía al modelo en las respuestas normales.
-- **No toca** el historial, el resumen ni el Session Archive.
-- Tiene su propio gestor de plantillas (🗂️) para guardar varios "estilos visuales".
+### The Absolute Premise is unbreakable law
 
-### El botón 🎨 Image
+Whatever you write in the *1. Absolute Premises* box is the model's highest-priority directive: it's read **first, on every turn**. Define roles, strict formatting, tone, absolute constraints, etc.
 
-Junto al botón Send. Abre el **modal de imagen** usando como escena lo que tengas escrito (o, si está vacío, el último mensaje de la conversación). El modal ofrece:
+Changes are **immediate**: on every `Send`, Cortex reads the box at that exact moment. You can switch personalities mid-conversation without losing the session's memory — the AI remembers everything discussed but responds under the new rules.
 
-- **✨ Create from context** — el rol IMAGINER + el contexto reciente + el resumen ejecutivo producen un prompt visual nuevo (también regenera el actual).
-- **📝 From user prompt** — carga tu texto tal cual, saltando la transformación del IMAGINER.
-- **📋 Copy** — copia el prompt.
-- **🎨 Generate** — genera de 1 a 4 imágenes.
-- **Aspecto** — `1:1` (cuadrado), `▭ Horizontal`, `▯ Vertical`.
-- **🗑️ Clear** — limpia los resultados.
+### The Template Manager (🗂️) — your agent library
 
-### Cada imagen guarda su propia receta
+The **🗂️** button next to the module title opens the manager:
 
-Al hacer clic en una imagen se abre un **visor a tamaño completo** con su metadato (prompt, negative prompt, seed, resolución y timestamp) en texto seleccionable/copiable. Al **descargar** la imagen, ese mismo metadato se incrusta dentro del archivo PNG (chunk `tEXt` `parameters`, el estándar que leen herramientas como PNG Info / Stable Diffusion): la receta viaja con la imagen.
+- **💾 Save current** — saves the current premise as a named agent.
+- **Use** — loads a saved agent into the box instantly.
+- **🔎 Search** and **All / Absolute Premises / IMAGINER** filters.
+- **⬇️ Export** — downloads all your agents as JSON (backup / migration).
+- **📂 Import** — imports a JSON file of agents (auto-detects whether the file contains sessions or templates).
+- **✏️ Edit / 🗑️ Delete** — edit or delete a saved agent.
+
+> **Workflow tip:** craft a premise, test it, and once you get the ideal behavior, save it. Over time you build an on-demand team of specialists: your strict translator, your prompt engineer, your novelist, your code reviewer… all one click away.
+
+### New *while keeping* the agent
+
+The **🔄** button next to the *Absolute Premises* title creates a new blank session that **keeps exactly** the current premise. Great for starting a new topic with the same agent without losing its personality. (The **✨ New** button in the Sessions module, in contrast, restores the default premise.)
 
 ---
 
-## 5. Gestión de memoria
+## 4. IMAGINER: image generation & visual prompts
 
-### El problema
-Los modelos de lenguaje tienen un límite estricto de tokens que pueden recordar a la vez. En Cortex el presupuesto por defecto es **4000 tokens**.
+Cortex includes an image module for **testing prompts**, **building prompts from the conversation context**, and **generating images** — all without leaving the chat.
 
-### El Termómetro
-La barra superior muestra en tiempo real cuánto de esa memoria activa está ocupada (verde → amarillo → rojo).
+### The IMAGINER role (module 1.5)
 
-### El Resumen Ejecutivo (compresión automática)
-Cuando el historial sin resumir supera el umbral (por defecto **1500 tokens**), Cortex invoca al LLM en silencio para que lea los mensajes antiguos y los convierta en un **resumen ejecutivo**, liberando espacio. Verás en el chat un aviso del sistema:
+It's a **parallel visual role**: its text defines how the chat context is turned into an image prompt (style, lighting, composition, prompt language, etc.). By default it's *"You are IMAGINER, a visual prompt creator…"*, and you can edit it to change the image style. Key points:
+
+- It's a **parallel path**: it is not sent to the model during normal replies.
+- It **doesn't touch** the history, the summary, or the Session Archive.
+- It has its own template manager (🗂️) for saving multiple "visual styles".
+
+### The 🎨 Image button
+
+Next to the Send button. It opens the **image modal** using as its scene whatever you have typed (or, if empty, the last conversation message). The modal offers:
+
+- **✨ Create from context** — the IMAGINER role + recent context + executive summary produce a new visual prompt (also regenerates the current one).
+- **📝 From user prompt** — loads your text verbatim, skipping the IMAGINER transformation.
+- **📋 Copy** — copies the prompt.
+- **🎨 Generate** — generates 1–4 images.
+- **Aspect ratio** — `1:1` (square), `▭ Horizontal`, `▯ Vertical`.
+- **🗑️ Clear** — clears the results.
+
+### Every image carries its own recipe
+
+Clicking an image opens a **full-size viewer** with its metadata (prompt, negative prompt, seed, resolution and timestamp) as selectable/copyable text. When you **download** the image, that same metadata is embedded inside the PNG file (a `tEXt` `parameters` chunk — the standard read by tools like PNG Info / Stable Diffusion): the recipe travels with the image.
+
+---
+
+## 5. Memory management
+
+### The problem
+Language models have a strict limit on how many tokens they can remember at once. In Cortex the default budget is **4000 tokens**.
+
+### The Thermometer
+The top bar shows in real time how much of that active memory is occupied (green → yellow → red).
+
+### The Executive Summary (automatic compression)
+When the un-summarized history exceeds the threshold (default **1500 tokens**), Cortex silently calls the LLM to read the older messages and turn them into an **executive summary**, freeing up space. You'll see a system notice in the chat:
 
 ```
 --- Previous history compressed into Executive Summary ---
 ```
 
-Los resúmenes se apilan en el módulo *2. Executive Summary*, separados por `== RESUMEN ==`. En cada `Send`, Cortex ensambla el prompt maestro así:
+Summaries stack up in the *2. Executive Summary* module, separated by `== RESUMEN ==`. On every `Send`, Cortex assembles the master prompt like this:
 
-1. **Absolute Premises** (reglas, primero siempre).
-2. **Executive Summary** (memoria comprimida, los bloques más recientes primero).
-3. **Historial reciente** (los mensajes sin resumir).
+1. **Absolute Premises** (rules, always first).
+2. **Executive Summary** (compressed memory, newest blocks first).
+3. **Recent history** (the un-summarized messages).
 
-Si el espacio se agota, se descartan los resúmenes más antiguos — nunca se corta a la mitad, manteniendo la estabilidad del prompt.
+If space runs out, the oldest summaries are discarded — never split in half, keeping the prompt stable.
 
-### Edición manual y Force Sync
-El resumen es **editable**: si la IA omitió un detalle o resumió mal, corrígelo a mano — tus ediciones se inyectan en el siguiente prompt. El botón **Force Sync** fuerza una síntesis inmediata del historial pendiente.
+### Manual editing & Force Sync
+The summary is **editable**: if the AI missed a detail or summarized poorly, fix it by hand — your edits are injected into the next prompt. The **Force Sync** button forces an immediate synthesis of the pending history.
 
-### Configuración fina
-En **⚙️ Settings** puedes ajustar el umbral de auto-resumen, el presupuesto de entrada de la síntesis y la longitud mínima del resumen.
+### Fine-tuning
+In **⚙️ Settings** you can adjust the auto-summarize threshold, the synthesis input budget, and the minimum summary length.
 
 ---
 
-## 6. Sesiones
+## 6. Sessions
 
-### Autoguardado invisible
-No existe botón "Guardar": en el momento en que envías tu primer mensaje se crea una sesión y desde entonces **todo se autoguarda** en tu navegador (IndexedDB): historial, premisas, IMAGINER, resumen, scratchpad y archive.
+### Invisible autosaving
+There is no "Save" button: the moment you send your first message a session is created, and from then on **everything autosaves** in your browser (IndexedDB): history, premises, IMAGINER, summary, scratchpad, and archive.
 
-### La lista de sesiones (panel derecho)
-- **Título automático** — la sesión se bautiza con las primeras palabras de tu primer mensaje (`[N] …`).
-- **✏️ Rename** — dale un nombre reconocible ("Debate sobre IAs", "Ideas del fin de semana").
-- **✨ New** — lienzo en blanco para un tema nuevo (tu sesión anterior queda guardada en la lista).
-- **🔄** — nueva sesión en blanco *manteniendo* el agente actual (ver sección 3).
-- **Clic en una sesión** — la recuperas al instante, con todo el contexto, como si no hubiera pasado un segundo.
-- **🗑️ Delete** — elimina la sesión seleccionada definitivamente.
+### The session list (right panel)
+- **Automatic title** — the session is named after the first words of your first message (`[N] …`).
+- **✏️ Rename** — give it a recognizable name ("Debate on AIs", "Weekend ideas").
+- **✨ New** — a blank canvas for a new topic (your previous session stays saved in the list).
+- **🔄** — a new blank session *keeping* the current agent (see section 3).
+- **Click a session** — recover it instantly, with full context, as if no time had passed.
+- **🗑️ Delete** — permanently deletes the selected session.
 
-### 💾 Exportar una sesión
-Descarga un JSON completo: historial, premisas, IMAGINER, resumen, scratchpad y archive. Ideal para copias de seguridad o migración.
+### 💾 Export a session
+Downloads a full JSON: history, premises, IMAGINER, summary, scratchpad, and archive. Ideal for backups or migration.
 
-### 📂 Importar
-Acepta tanto **sesiones** como **plantillas de agentes** (los detecta automáticamente). La sesión importada se añade como nueva, sin sobrescribir nada.
+### 📂 Import
+Accepts both **sessions** and **agent templates** (auto-detected). Imported sessions are added as new — nothing is ever overwritten.
 
-### 🔗 Compartir entre dispositivos (Share)
-El botón **🔗 Share** publica la sesión actual en un enlace permanente:
+### 🔗 Share across devices
+The **🔗 Share** button publishes the current session to a permanent link:
 
 ```
 https://perchance.org/seven-cortex-gem-v5?import=<shareName>
 ```
 
-Abre ese enlace en **cualquier dispositivo** y la sesión se importa a la base de datos local de ese dispositivo. El enlace se copia al portapapeles. La sesión compartida nunca sobrescribe sesiones existentes.
+Open that link on **any device** and the session is imported into that device's local database. The link is copied to your clipboard. Shared sessions never overwrite existing ones.
 
-### Reabrir la última sesión
-Por defecto, al volver a abrir el generador se reabre automáticamente la última sesión activa (se puede desactivar en ⚙️ Settings).
+### Reopen last session
+By default, reopening the generator reopens the last active session (can be disabled in ⚙️ Settings).
 
 ---
 
 ## 7. Session Archive
 
-Es la **versión histórica fiel** de la conversación, distinta del historial dinámico:
+It's the **faithful historical record** of the conversation, distinct from the dynamic history:
 
-- Guarda una **copia numerada y secuencial** de cada respuesta de la IA, etiquetada con la pregunta del usuario (`USER`) que la provocó — **tal como sucedió**, sin resúmenes ni compresión.
-- **No se envía al modelo** — es un registro puro.
-- Sirve para copiar o exportar la salida completa de la sesión.
+- Stores a **numbered, sequential copy** of every AI response, tagged with the user question (`USER`) that triggered it — **exactly as it happened**, with no summaries or compression.
+- **Not sent to the model** — it's a pure record.
+- Use it to copy or export the full output of the session.
 
-Desde el módulo *Session Archive* (botón **Show**) puedes:
+From the *Session Archive* module (**Show** button) you can:
 
-- **📋 Copy all** — copiar toda la conversación.
-- **⬇️ Export all** — descargar la conversación completa como texto plano.
-- **⬇️ Export responses only** — descargar **solo las respuestas de la IA** (sin las preguntas). Útil, por ejemplo, si eres un storyteller y quieres únicamente la narración final, limpia, sin el texto original comprimido.
+- **📋 Copy all** — copy the entire conversation.
+- **⬇️ Export all** — download the full conversation as plain text.
+- **⬇️ Export responses only** — download **only the AI responses** (without the questions). Useful, for example, if you're a storyteller and want just the final narration, clean, with the original unsummarized text.
 
 ---
 
 ## 8. Scratchpad (Private)
 
-Tu bloc de notas privado dentro de la sesión. El texto aquí **jamás se envía a la IA** ni entra en el contexto. Úsalo para enlaces, ideas temporales o notas de trabajo. Se autoguarda con la sesión.
+Your private notebook inside the session. The text here is **never sent to the AI** nor does it enter the context. Use it for links, temporary ideas, or working notes. It autosaves with the session.
 
 ---
 
-## 9. Configuración
+## 9. Settings
 
-### Pestaña General
-- **Auto-summarize trigger (tokens)** — umbral que dispara la compresión del historial (por defecto 1500).
-- **Synthesis input budget (tokens)** — presupuesto de tokens para la llamada de síntesis (por defecto 5000).
-- **Minimum summary length (chars)** — longitud mínima para aceptar un resumen nuevo (por defecto 20).
-- **Reopen last session** — reabrir la última sesión al abrir el generador (por defecto activado).
-- **Restore defaults** — vuelve a los valores por defecto.
-- Estadísticas de uso de la base de datos local.
+### General tab
+- **Auto-summarize trigger (tokens)** — the threshold that triggers history compression (default 1500).
+- **Synthesis input budget (tokens)** — the token budget for the synthesis call (default 5000).
+- **Minimum summary length (chars)** — minimum length for accepting a new summary (default 20).
+- **Reopen last session** — reopen the last session when opening the generator (default on).
+- **Restore defaults** — back to default values.
+- Local database usage statistics.
 
-### Zona de peligro
-- **Delete all sessions** — borra todas las sesiones (primero descarga automáticamente una copia de seguridad de todo).
-- **Full reset** — borra la base de datos completa y los ajustes. Debes escribir `RESET` para confirmar.
-
----
-
-## 10. Preguntas frecuentes
-
-**¿Dónde se guardan mis datos?**
-Localmente, en tu navegador (IndexedDB). No dependen de servidores externos. El único uso de servidor es el enlace **Share** (para transferir una sesión entre dispositivos) y, por supuesto, las llamadas al LLM y la generación de imágenes.
-
-**¿Cortex pierde el hilo en conversaciones largas?**
-No. El resumen ejecutivo comprime el pasado y mantiene la coherencia. Con límite de tokens tienes todos los sistemas (todo sistema tiene su límite), pero Cortex lo estira al máximo.
-
-**¿Puedo cambiar de personalidad sin perder el contexto?**
-Sí. Cambia la Absolute Premise y el siguiente `Send` ya usa las nuevas reglas; la memoria de la sesión se conserva.
-
-**¿Sirve para historias?**
-Sí. El Session Archive con *Export responses only* te da la narración final limpia, y el IMAGINER te genera los prompts visuales de tus escenas.
-
-**¿Puedo llevar mi configuración a otro dispositivo?**
-Exporta tus **agentes** (🗂️ → Export) y/o la **sesión** (💾 Export) como JSON e impórtalos donde quieras. O usa el enlace **🔗 Share** para mover una sesión completa.
+### Danger zone
+- **Delete all sessions** — deletes all sessions (it first automatically downloads a backup of everything).
+- **Full reset** — wipes the entire database and settings. You must type `RESET` to confirm.
 
 ---
 
-## 11. Arquitectura técnica
+## 10. FAQ
 
-Cortex es un generador de Perchance. El código vive en `index.html` (una sola aplicación IIFE) y `main.pjs` (imports de plugins y metadatos).
+**Where is my data stored?**
+Locally, in your browser (IndexedDB). It doesn't depend on external servers. The only server usage is the **Share** link (to transfer a session between devices) and, of course, the LLM calls and image generation.
 
-### Persistencia
-- **IndexedDB** (`CortexDB`) — base de datos local: `sessions` y `premiseTemplates`.
-- **localStorage** — ajustes (`cortexSettings`), última sesión activa, estado del panel retráctil.
-- **Editable uploads** (upload-plugin) — publicación del enlace **Share**; cada enlace se lee con `?import=<name>` y se importa como sesión nueva.
+**Does Cortex lose the thread in long conversations?**
+No. The executive summary compresses the past and keeps things coherent. All systems have their token limit, but Cortex stretches it as far as it can.
 
-### Plugins de Perchance usados
-- `ai-text-plugin` — motor del LLM (chat con streaming, síntesis de resúmenes en silencio).
-- `text-to-image-plugin` — generación de imágenes del IMAGINER.
-- `upload-plugin` — publicación de enlaces Share.
-- `super-fetch-plugin` — respaldo de red para leer el README / enlaces Share sin CORS.
+**Can I change personality without losing context?**
+Yes. Change the Absolute Premise and the next `Send` already uses the new rules; the session's memory is preserved.
 
-### Módulos principales (objetos)
-| Objeto | Responsabilidad |
+**Is it good for stories?**
+Yes. The Session Archive's *Export responses only* gives you the clean final narration, and IMAGINER generates the visual prompts for your scenes.
+
+**Can I take my setup to another device?**
+Export your **agents** (🗂️ → Export) and/or the **session** (💾 Export) as JSON and import them anywhere. Or use the **🔗 Share** link to move a whole session.
+
+---
+
+## 11. Technical architecture
+
+Cortex is a Perchance generator. The code lives in `index.html` (a single IIFE application) and `main.pjs` (plugin imports and metadata).
+
+### Persistence
+- **IndexedDB** (`CortexDB`) — local database: `sessions` and `premiseTemplates`.
+- **localStorage** — settings (`cortexSettings`), last active session, retractable-panel state.
+- **Editable uploads** (upload-plugin) — publishing the **Share** link; each link is read via `?import=<name>` and imported as a new session.
+
+### Perchance plugins used
+- `ai-text-plugin` — the LLM engine (streaming chat, silent summary synthesis).
+- `text-to-image-plugin` — IMAGINER image generation.
+- `upload-plugin` — publishing Share links.
+- `super-fetch-plugin` — network fallback for reading the README / Share links without CORS.
+
+### Main modules (objects)
+| Object | Responsibility |
 |---|---|
-| `State` | Estado global (sesión activa, historial, ajustes de tokens) |
-| `DB_Service` | Capa de datos IndexedDB |
-| `Session_Manager` | Ciclo de vida de sesiones: crear, listar, renombrar, exportar, importar, compartir |
-| `Premise_Manager` | Gestor de plantillas de agentes (Absolute Premises e IMAGINER) |
-| `LLM_Service` | Llamadas al modelo, streaming, watchdog de inactividad |
-| `Memory_Manager` | Termómetro, síntesis de resúmenes, ventana de contexto |
-| `Image_Handler` | IMAGINER: prompts visuales, generación, metadatos PNG |
-| `UI_Handlers` | Render del chat (markdown), archive, scroll, panel retráctil |
-| `Config_Manager` | Ajustes de usuario y persistencia |
+| `State` | Global state (active session, history, token settings) |
+| `DB_Service` | IndexedDB data layer |
+| `Session_Manager` | Session lifecycle: create, list, rename, export, import, share |
+| `Premise_Manager` | Agent template manager (Absolute Premises & IMAGINER) |
+| `LLM_Service` | Model calls, streaming, inactivity watchdog |
+| `Memory_Manager` | Thermometer, summary synthesis, context window |
+| `Image_Handler` | IMAGINER: visual prompts, generation, PNG metadata |
+| `UI_Handlers` | Chat rendering (markdown), archive, scroll, retractable panel |
+| `Config_Manager` | User settings and persistence |
 
-### Cómo funciona el prompt maestro (por turno)
+### How the master prompt is built (per turn)
 ```
-1. Absolute Premises      ← reglas, primero y siempre
-2. Executive Summary      ← memoria comprimida (bloques más recientes primero)
-3. Historial reciente     ← mensajes sin resumir
+1. Absolute Premises      ← rules, first and always
+2. Executive Summary      ← compressed memory (newest blocks first)
+3. Recent history         ← un-summarized messages
 ```
-El presupuesto se reparte con una ventana "más reciente primero": si no cabe todo, se descartan los bloques de resumen más antiguos, nunca se parte un mensaje a la mitad.
+The budget is distributed with a "newest first" window: if it doesn't all fit, the oldest summary blocks are dropped — a message is never split in half.
 
-### Seguridad / saneado
-- Las respuestas del modelo se renderizan como **markdown** (`marked`), pero todo HTML crudo se escapa — una instrucción inyectada en la salida del LLM no se ejecuta.
-- El **Scratchpad** y el **Session Archive** nunca se envían al modelo.
+### Safety / sanitization
+- Model responses are rendered as **markdown** (`marked`), but all raw HTML is escaped — an instruction injected into the LLM's output doesn't execute.
+- The **Scratchpad** and the **Session Archive** are never sent to the model.
 
-### Documentación en vivo
-El botón **📖 Docs** descarga este mismo README desde `https://raw.githubusercontent.com/lcarrillo1969/Cortex/main/README.md` y lo renderiza dentro de la app, de modo que la documentación del repositorio y la del generador siempre coinciden.
+### Live documentation
+The **📖 Docs** button downloads this very README from `https://raw.githubusercontent.com/lcarrillo1969/Cortex/main/README.md` and renders it inside the app, so the repository documentation and the generator documentation always match.
 
 ---
 
-*Cortex: un cerebro externo que gestiona la logística — almacenamiento, contexto, formato y optimización de tokens — para que la inteligencia artificial se dedique a razonar.*
+*Cortex: an external brain that handles the logistics — storage, context, formatting, and token optimization — so the artificial intelligence can focus on reasoning.*
