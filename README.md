@@ -1,148 +1,297 @@
-# 01.01 Cortex: Intoduccion
+# Cortex: LLM External Brain
 
-La intención principal de este código es transformar un modelo de lenguaje (LLM) crudo y sin estado en un entorno de trabajo estructurado y persistente, similar a la arquitectura de un IDE personalizado equipado con paneles de propiedades y navegadores de estado.
+**Cortex** transforma un modelo de lenguaje (LLM) sin estado en un **entorno de trabajo estructurado y persistente**: un "cerebro externo" que gestiona la memoria, el contexto, la configuración de comportamiento y el guardado, dejando que la IA se dedique a razonar.
 
-El sistema, llamado Cortex, resuelve los dos problemas más grandes al interactuar con LLMs en sesiones largas: la pérdida de memoria cuando se agota la ventana de contexto y la falta de persistencia de los datos.
+A diferencia de un chat tradicional, Cortex está construido para **sesiones largas y complejas**: mantiene el contexto de la conversación mediante resúmenes automáticos, guarda todo localmente en tu navegador, y se adapta a cualquier propósito — storyteller, generador de prompts, chatbot, discusión técnica, ingeniero de prompts para imágenes, etc.
 
-Aquí tienes el desglose de lo que el código busca lograr a través de sus componentes principales:
-
-## 1. Gestión Inteligente de Memoria (El "Termómetro" y el Resumen Automático)
-El núcleo de la innovación de este código está en el objeto Memory_Manager. Dado que los modelos de IA tienen un límite estricto de palabras que pueden recordar (establecido aquí en 4000 tokens), el código implementa un sistema para no "olvidar" nunca el contexto:
-* **Monitoreo visual:** Un "termómetro" en la interfaz muestra qué porcentaje de la memoria de la IA se está utilizando.
-* **Compresión de estado:** Cuando el historial de chat nuevo supera cierto límite (1500 tokens), el sistema invoca al LLM en segundo plano (generateSilent) para que lea los mensajes antiguos y los convierta en un resumen ejecutivo.
-* **Inyección dinámica:** En cada nuevo mensaje del usuario, el código ensambla un prompt maestro que incluye las reglas absolutas, el resumen comprimido y el historial reciente. Si el espacio se agota, sacrifica los resúmenes más antiguos pero nunca corta a la mitad, manteniendo la estabilidad del prompt.
-
-## 2. Arquitectura de Interfaz Dividida
-El código divide la pantalla en dos áreas funcionales distintas para separar la interacción de la configuración:
-* **Canvas Principal (Izquierda):** Maneja la interacción típica de chat, el historial de mensajes y el streaming de texto en tiempo real (UI_Handlers.streamToLastMessage).
-* **External Brain (Derecha):** Funciona como un panel de control modular. Permite inyectar directivas irrompibles (Absolute Premises), editar el resumen dinámico si la IA omitió algo importante, y mantener un Scratchpad privado (notas del usuario que jamás se envían al modelo).
-
-## 3. Persistencia de Datos Locales (IndexedDB)
-A través del DB_Service y Session_Manager, el código implementa un sistema de base de datos local directamente en el navegador del usuario.
-* Permite crear múltiples áreas de trabajo (sesiones), guardarlas automáticamente y navegar entre ellas sin perder datos.
-* Incluye lógica para importar, exportar (en formato JSON) y renombrar sesiones, asegurando que el progreso del usuario no dependa de servidores externos y se mantenga entre recargas de la página.
-
-## 4. Auditoría y Trazabilidad (Session Archive)
-El módulo "Session Archive" es una característica puramente de registro. Guarda una copia exacta, numerada y secuencial de cada par "Pregunta del Usuario / Respuesta de la IA". A diferencia del historial dinámico que se comprime para ahorrar tokens, este archivo se mantiene intacto para que el usuario pueda copiar o exportar la conversación completa en texto plano.
-
-En resumen, la intención del desarrollador fue construir un "cerebro externo" que maneja toda la logística de almacenamiento, formato y optimización de tokens mediante código, dejando que la inteligencia artificial se dedique exclusivamente a razonar sobre la información limpia que recibe.
+> 🔗 **Generador:** https://perchance.org/seven-cortex-gem-v5
+> 📂 **Repositorio / Documentación:** https://github.com/lcarrillo1969/Cortex
 
 ---
 
-# 02.01 - Cortex: El inicio
+## Índice
 
-# Manual de Usuario: Cortex - LLM External Brain
-Cortex es un entorno de trabajo diseñado para interactuar con Inteligencia Artificial. A diferencia de un chat tradicional, está construido para manejar sesiones largas y complejas sin que la IA "olvide" de qué estaban hablando.
-
-# 1. Tu Primera Vez en Cortex (El panel principal)
-Al abrir Cortex por primera vez, verás una interfaz dividida, pero no necesitas configurar absolutamente nada para empezar. Por defecto, Cortex está configurado con una directiva inicial que lo convierte en un asistente general, directo y muy útil. Su comportamiento inicial está comprobado para resolver la inmensa mayoría de las consultas.
-
-Aquí te explicamos cómo es el flujo de trabajo natural:
-
-### 1) Interactuando con Cortex
-La comunicación es tan sencilla como en cualquier otra IA. En la parte inferior de la pantalla encontrarás la caja de texto. Simplemente escribe tu pregunta, duda, o pega tu código, y haz clic en el botón Send (o presiona Enter). Si necesitas hacer saltos de línea mientras escribes, usa Shift + Enter.
-
-### 2) Coherencia y Contexto Prolongado
-A partir de tu primer mensaje, Cortex entra en acción. Mientras tú conversas normalmente, el sistema se encarga de que la IA mantenga un hilo conductor perfecto. No importa si tu proyecto toma horas o requiere decenas de idas y vueltas; Cortex mantendrá el contexto de la charla coherente en todo momento, recordando los detalles que ya discutieron.
-
-### 3) El "Termómetro" de Memoria (Superando los límites)
-Todos los modelos de lenguaje (como el motor de Perchance que impulsa a Cortex) tienen un límite estricto de cuántas palabras o "tokens" pueden recordar a la vez. Cortex soluciona este problema y expande esa capacidad a través de un control visual: el termómetro de Context Memory ubicado en la parte superior.
-
-Esta barra te indica en tiempo real cuánto espacio de la memoria "activa" de la IA estás ocupando. A medida que la charla avanza, verás que la barra empieza a llenarse (pasando de verde a amarillo).
-
-### 4) El Resumen Automático (Cuando la barra se llena)
-Cortex no deja que la memoria colapse. Cuando el termómetro alcanza niveles críticos (alrededor del 80-85%), el sistema pausa un segundo y actúa por su cuenta. Cortex lee tus mensajes antiguos, los comprime en un resumen ejecutivo para extraer lo verdaderamente importante, y libera espacio en la memoria para que puedas seguir trabajando.
-
-Cuando esto ocurre, notarás un mensaje automático del sistema insertado en tu historial de chat que dice:
-`--- Previous history compressed into Executive Summary ---`
-Este mensaje te confirma que Cortex ha empaquetado el pasado con éxito. La ventana de memoria vuelve a tener espacio disponible y tú puedes continuar interactuando con la IA sin perder la coherencia ni el contexto general de tu proyecto. ¡Tú solo preocúpate por chatear, el sistema gestionará la memoria!
+1. [Primeros pasos](#1-primeros-pasos)
+2. [La interfaz](#2-la-interfaz)
+3. [Agentes y Absolute Premises (el corazón de Cortex)](#3-agentes-y-absolute-premises)
+4. [IMAGINER: generación de imágenes y prompts visuales](#4-imaginer-generación-de-imágenes-y-prompts-visuales)
+5. [Gestión de memoria: el Termómetro y el Resumen Ejecutivo](#5-gestión-de-memoria)
+6. [Sesiones: guardado, recuperación y compartir](#6-sesiones)
+7. [Session Archive: la conversación tal como sucedió](#7-session-archive)
+8. [Scratchpad (privado)](#8-scratchpad-privado)
+9. [Configuración (⚙️)](#9-configuración)
+10. [Preguntas frecuentes](#10-preguntas-frecuentes)
+11. [Arquitectura técnica (para desarrolladores)](#11-arquitectura-técnica)
 
 ---
 
-# 02.02 Cortex: Sessiones
+## 1. Primeros pasos
 
-# 2. Sesiones y Autoguardado: Nunca pierdas el hilo de tus charlas
-Una de las mayores ventajas de Cortex frente a un chat tradicional es que no tienes que preocuparte por perder tu progreso si cierras el navegador por accidente o si quieres pausar una conversación para seguirla mañana. Todo funciona a través de un sistema de autoguardado invisible.
+Abre el generador. **No necesitas configurar nada** para empezar: Cortex viene con un agente por defecto — un asistente general, directo y útil.
 
-### 1) El nacimiento de una charla
-Al abrir Cortex, verás un lienzo en blanco con el mensaje:
-> "System initialized. Awaiting context or input."
+1. Escribe tu mensaje en la caja de texto de la parte inferior.
+2. Pulsa **Send** (o `Enter`). Usa `Shift + Enter` para saltos de línea.
+3. A partir del primer mensaje se crea automáticamente una **sesión** (sin botón de guardar: todo se autoguarda).
 
-En el instante exacto en que envías tu primer mensaje —ya sea para resolver una duda, explorar una idea o simplemente para quejarte de lo malo que es Gemini—, Cortex crea de manera automática una Sesión independiente en segundo plano. No hay un botón de "Guardar"; a partir de ese momento, cada cosa que escribas, cada respuesta de la IA y cada compresión de su memoria se guarda sola en tu navegador.
-
-### 2) Identificando y Renombrando tu charla
-En la parte superior del panel derecho encontrarás la lista de tus sesiones. En cuanto inicies la charla, verás aparecer una barra en la parte inferior de esta lista con los controles:
-* **Título automático:** Cortex leerá tu primer mensaje y usará esas primeras palabras para bautizar la sesión temporalmente (por ejemplo: [1] Hola, quiero hablar sobre...).
-* **Botón ✏️ Rename (Renombrar):** Como es probable que acumules varias conversaciones diferentes, es muy recomendable hacer clic aquí para darle un nombre que tú reconozcas rápidamente, como "Debate sobre IAs" o "Ideas para el fin de semana".
-
-### 3) El ciclo de vida: Empezar, Recuperar y Eliminar
-Cortex está diseñado para que mantengas varias charlas al mismo tiempo sin mezclar los temas ni confundir a la IA. Tienes control total sobre tus sesiones:
-* **✨ Botón New (Cambiar de tema):** Si estás inmerso en una conversación y de repente quieres preguntar algo que no tiene nada que ver, haz clic en New. Esto limpiará el panel principal para que empieces de cero. Tu charla anterior no se borra, simplemente se guarda y se queda esperando en tu lista.
-* **Retomar el hilo (Tus charlas guardadas):** Este es el corazón de Cortex. En tu lista verás todas tus conversaciones pasadas. Si haces clic en cualquiera de ellas, la interfaz se actualiza al instante. Recuperarás todo tu historial de chat y podrás seguir hablando con la IA exactamente donde lo dejaste, con ella recordando todo el contexto anterior como si no hubiera pasado un segundo.
-* **🗑️ Botón Delete (Limpieza):** Si una charla llegó a su fin definitivo o solo estabas haciendo pruebas, asegúrate de tener seleccionada esa sesión y haz clic en Delete para eliminarla para siempre y mantener tu lista ordenada.
+Todo lo que escribas, cada respuesta de la IA y cada resumen de memoria se guarda solo en tu navegador (IndexedDB). Puedes cerrar la pestaña y retomar donde lo dejaste.
 
 ---
 
-# 02.03 Cortex: Absolute Premises
+## 2. La interfaz
 
-# 3. Absolute Premises: Cambiando la personalidad de la IA
-Aunque el nombre "Absolute Premises" (Premisas Absolutas) suena un poco abstracto, en la práctica es el panel más poderoso de Cortex. Esta caja de texto dicta quién es la IA y cómo debe comportarse. Todo lo que escribas aquí se convierte en la ley inquebrantable para el modelo.
+Cortex divide la pantalla en dos áreas:
 
-### 1) El cambio es inmediato (En tiempo real)
-Una particularidad clave de Cortex es que no "congela" la personalidad al inicio de la charla. Cada vez que haces clic en Send, el sistema lee lo que está escrito en la caja de Absolute Premises en ese exacto milisegundo.
+### 🖥️ Canvas principal (izquierda)
+El chat: historial de mensajes, streaming de respuestas en tiempo real y la caja de entrada.
 
-Esto significa que el cambio es inmediato. Si estás a la mitad de una charla normal y decides borrar la premisa para escribir: "A partir de ahora, responde siempre como si fueras un pirata sarcástico", la IA adoptará esa personalidad en su próxima respuesta, sin necesidad de reiniciar nada.
+### 🧠 External Brain (derecha)
+El panel de control modular. Contiene, de arriba a abajo:
 
-### 2) Cómo iniciar una nueva charla con una personalidad distinta
-Si quieres empezar un tema de cero con una instrucción muy específica (por ejemplo, para que actúe como un traductor estricto o un experto en código), es muy importante seguir el orden correcto de los pasos.
+| Módulo | Función |
+|---|---|
+| **Sesiones** | Nueva, importar, lista de conversaciones, renombrar, exportar, compartir, eliminar |
+| **1. Absolute Premises** | La "ley" que define quién es la IA y cómo responde |
+| **1.5 IMAGINER** | El rol visual que convierte el contexto en prompts para imágenes |
+| **2. Executive Summary** | La memoria comprimida de la conversación (editable) |
+| **Session Archive** | Copia fiel y numerada de cada respuesta, tal como se generó |
+| **3. Scratchpad (Private)** | Notas personales que **nunca** se envían a la IA |
 
-Existe una pequeña trampa: el botón "New" siempre restaura el texto por defecto. Si escribes tu nueva personalidad y luego le das a "New", el sistema borrará lo que escribiste.
+### 📐 Panel retráctil
+El botón **▸ / ◂** en el borde superior derecho colapsa o expande el External Brain para que el canvas principal ocupe todo el ancho. El estado se recuerda entre visitas.
 
-Para hacerlo correctamente, sigue estos 4 pasos exactos:
-1. Haz clic en el botón ✨ New para limpiar el chat y preparar un lienzo en blanco.
-2. Ve a la caja de Absolute Premises, borra el texto que aparece por defecto, y escribe o pega tus nuevas instrucciones (ej. "Eres un experto en bases de datos. No uses saludos, solo dame el código").
-3. Ve a la caja de chat principal en la esquina inferior izquierda y escribe tu primera pregunta.
-4. Haz clic en Send.
+### Barra superior
+- **Termómetro de memoria** — uso del contexto en tiempo real.
+- **📖 Docs** — abre esta misma documentación (se descarga en vivo desde GitHub).
+- **⚙️ Settings** — configuración del sistema.
 
-Al hacerlo en este orden, la IA nacerá en esa nueva sesión respetando exactamente las reglas que le acabas de imponer.
+---
 
-### 3) Caso de uso: Cambiando de rol a mitad de la historia
-Para entender el verdadero poder de cambiar la personalidad sobre la marcha, debes recordar algo clave: cambiar la premisa no borra la memoria de la sesión. La IA recuerda todo lo que han hablado, pero cambia radicalmente su forma de procesarlo y responder.
+## 3. Agentes y Absolute Premises
 
-Imagina que estás escribiendo un relato histórico. Para lograr el tono adecuado, en tu caja de Absolute Premises colocas lo siguiente:
-> "Eres Miguel de Cervantes. Escribes aventuras épicas y poéticas, utilizando un vocabulario clásico del Siglo de Oro español."
+### ¿Qué es un Agente?
 
-Conversas con la IA, desarrollan a los personajes y llegan a una escena visualmente increíble donde el protagonista se enfrenta a una tormenta. En ese momento, decides que quieres ilustrar esa escena exacta usando otra IA generadora de imágenes (como Midjourney o DALL-E).
+Un **Agente** es una configuración de comportamiento guardada: un conjunto de reglas (la *Absolute Premise*) que le dice a la IA quién es, cómo piensa y en qué formato responde. Cuando guardas una premisa como plantilla, estás creando un **agente reutilizable**.
 
-El problema es que un generador de imágenes no sabe de qué trata tu cuento, necesita un prompt técnico y descriptivo. Sin salir de tu sesión, vas a la caja de Absolute Premises, borras la instrucción de Cervantes y colocas esta nueva:
-> "Eres un Experto en Prompt Engineering para IA de imágenes. Analiza la escena actual de nuestra historia y redacta un prompt descriptivo en inglés. Enfócate en la iluminación, el estilo artístico, los colores y la composición fotográfica. No escribas narrativa."
+El término correcto en Cortex es **Agente**: cada plantilla guardada es un "especialista" que puedes invocar con un clic. La app muestra el nombre del agente activo junto al título de los módulos *1. Absolute Premises* y *1.5 IMAGINER* (por defecto: `Cortex` e `IMAGINER`; si editas el texto sin guardarlo como plantilla, aparece como `Custom`).
 
-Al enviar tu siguiente mensaje en el chat (por ejemplo: "Genera el prompt para la escena de la tormenta"), el cambio es instantáneo. La IA dejará de hablar como un novelista del siglo XVII. Sin embargo, como aún conserva todo el contexto del cuento en su memoria, sabrá exactamente quién es el personaje, cómo está vestido y dónde se encuentra, entregándote un prompt técnico perfecto.
+### La Absolute Premise es ley inquebrantable
 
-Una vez que tengas el texto para tu imagen, simplemente vuelves a escribir la premisa de Cervantes en la caja, y continúan escribiendo la novela como si nada hubiera pasado.
+Todo lo que escribas en la caja *1. Absolute Premises* es la directiva de más alta prioridad para el modelo: se lee **primero, en cada turno**. Define roles, formato estricto, tono, restricciones absolutas, etc.
 
-### 4) Gestor de Plantillas: Cómo no perder tus personalidades (El ícono 🗂️)
-En el ejemplo anterior, borraste la instrucción de Cervantes para escribir la del Experto en Prompts. Pero, ¿qué pasa cuando quieres volver a Cervantes? Estar copiando y pegando textos desde un bloc de notas externo es molesto y rompe el ritmo de trabajo.
+El cambio es **inmediato**: en cada `Send`, Cortex lee la caja en ese instante. Puedes cambiar de personalidad a mitad de una charla sin perder la memoria de la sesión — la IA recuerda todo lo hablado, pero responde bajo las nuevas reglas.
 
-Para solucionar esto, Cortex incluye un Gestor de Plantillas (Premise Templates) integrado. Si miras el título del módulo 1. Absolute Premises, verás un pequeño botón con el ícono de un archivero: 🗂️. Al hacer clic allí, se abrirá tu biblioteca personal de comportamientos.
+### El Gestor de Plantillas (🗂️) — tu biblioteca de agentes
 
-¿Cómo funciona el flujo de guardado y recuperación? Siguiendo el mismo caso de la novela:
-1. **Guardar antes de borrar:** Antes de borrar tu instrucción de Cervantes, haces clic en 🗂️ y luego en el botón 💾 Save current (Guardar actual). El sistema te pedirá un nombre; le pones "Cervantes Histórico" y listo, ya quedó guardado para siempre en tu base de datos local.
-2. **Crear nuevas sobre la marcha:** Ahora sí, borras la caja, escribes tu instrucción de Experto en Prompts y generas tu imagen. Si te gustó cómo funcionó ese rol técnico, vuelves a abrir el archivero (🗂️) y lo guardas como "Creador de Prompts Visuales".
-3. **Recuperar con un clic:** Cuando estés listo para seguir escribiendo tu novela, abres el archivero 🗂️. Verás tu lista de plantillas guardadas. Simplemente buscas "Cervantes Histórico" y haces clic en el botón Usar.
+El botón **🗂️** junto al título del módulo abre el gestor:
 
-Cortex reemplazará automáticamente el texto de la caja con tu premisa original de Cervantes. En cuestión de segundos y sin salir de la pantalla, habrás saltado de un novelista clásico a un ingeniero técnico y de regreso al novelista, sin perder el hilo de tu historia ni tener que reescribir una sola instrucción.
+- **💾 Save current** — guarda la premisa actual como un agente con nombre.
+- **Usar** — carga un agente guardado en la caja al instante.
+- **🔎 Search** y filtros **All / Absolute Premises / IMAGINER**.
+- **⬇️ Export** — descarga todos tus agentes como JSON (copia de seguridad / migración).
+- **📂 Import** — importa un archivo JSON de agentes (detecta automáticamente si el archivo es de sesiones o de plantillas).
+- **✏️ Edit / 🗑️ Delete** — editar o eliminar un agente guardado.
 
-### 5) Premise Templates Construyendo tu arsenal: Un verdadero Gestor de Personalidades
-En la práctica, este sistema de plantillas trasciende la simple función de "guardar textos" para convertirse en tu propio Gestor de Personalidades. Su mayor valor no radica solo en salvarte de un apuro en la sesión actual, sino en el uso subsecuente a lo largo del tiempo.
+> **Consejo de flujo:** construye una premisa, pruébala, y cuando consigas el comportamiento ideal guárdala. Con el tiempo acumulas un equipo de especialistas a la carta: tu traductor estricto, tu ingeniero de prompts, tu novelista, tu revisor de código… todos a un clic.
 
-Crear la premisa perfecta —lograr que la IA responda exactamente con el tono, nivel técnico y formato que deseas— requiere ensayo y error. Una vez que consigues ese comportamiento ideal, no querrás perderlo.
+### Nuevo *manteniendo* el agente
 
-Al guardar estas premisas exitosas, estás construyendo una biblioteca de especialistas. Con el tiempo, dejarás de ver el ícono 🗂️ como un cajón de textos y lo empezarás a ver como tu equipo de expertos a la carta. Ya sea que abras Cortex mañana, la próxima semana o en un proyecto completamente nuevo, tendrás a un solo clic de distancia a tu experto en código, tu ingeniero de prompts, tu traductor estricto o tu novelista clásico, todos listos para "entrar a trabajar" en cualquier momento y en cualquier charla.
-¿Le gustaría que genere un cuestionario de repaso técnico basado en este manual para evaluar el conocimiento del sistema?
+El botón **🔄** junto al título de *Absolute Premises* crea una sesión nueva en blanco **conservando exactamente** la premisa actual. Útil para empezar un tema nuevo con el mismo agente, sin perder la personalidad. (El botón **✨ New** del módulo de sesiones, en cambio, restaura la premisa por defecto.)
 
-Fuentes:
-02.02 Cortex: Sessiones
-02.03 Cortex: Absolute Premises
-01.01 Cortex: Intoduccion
-02.01 - Cortex: El inicio
+---
+
+## 4. IMAGINER: generación de imágenes y prompts visuales
+
+Cortex incluye un módulo de imagen para **probar prompts**, **construir prompts a partir del contexto de la conversación** y **generar imágenes** — todo sin salir del chat.
+
+### El rol IMAGINER (módulo 1.5)
+
+Es un **rol visual paralelo**: su texto define cómo se convierte el contexto del chat en un prompt de imagen (estilo, iluminación, composición, idioma del prompt, etc.). Por defecto es *"You are IMAGINER, a visual prompt creator…"*, y puedes editarlo para cambiar el estilo de imagen. Clave:
+
+- Es un **camino paralelo**: no se envía al modelo en las respuestas normales.
+- **No toca** el historial, el resumen ni el Session Archive.
+- Tiene su propio gestor de plantillas (🗂️) para guardar varios "estilos visuales".
+
+### El botón 🎨 Image
+
+Junto al botón Send. Abre el **modal de imagen** usando como escena lo que tengas escrito (o, si está vacío, el último mensaje de la conversación). El modal ofrece:
+
+- **✨ Create from context** — el rol IMAGINER + el contexto reciente + el resumen ejecutivo producen un prompt visual nuevo (también regenera el actual).
+- **📝 From user prompt** — carga tu texto tal cual, saltando la transformación del IMAGINER.
+- **📋 Copy** — copia el prompt.
+- **🎨 Generate** — genera de 1 a 4 imágenes.
+- **Aspecto** — `1:1` (cuadrado), `▭ Horizontal`, `▯ Vertical`.
+- **🗑️ Clear** — limpia los resultados.
+
+### Cada imagen guarda su propia receta
+
+Al hacer clic en una imagen se abre un **visor a tamaño completo** con su metadato (prompt, negative prompt, seed, resolución y timestamp) en texto seleccionable/copiable. Al **descargar** la imagen, ese mismo metadato se incrusta dentro del archivo PNG (chunk `tEXt` `parameters`, el estándar que leen herramientas como PNG Info / Stable Diffusion): la receta viaja con la imagen.
+
+---
+
+## 5. Gestión de memoria
+
+### El problema
+Los modelos de lenguaje tienen un límite estricto de tokens que pueden recordar a la vez. En Cortex el presupuesto por defecto es **4000 tokens**.
+
+### El Termómetro
+La barra superior muestra en tiempo real cuánto de esa memoria activa está ocupada (verde → amarillo → rojo).
+
+### El Resumen Ejecutivo (compresión automática)
+Cuando el historial sin resumir supera el umbral (por defecto **1500 tokens**), Cortex invoca al LLM en silencio para que lea los mensajes antiguos y los convierta en un **resumen ejecutivo**, liberando espacio. Verás en el chat un aviso del sistema:
+
+```
+--- Previous history compressed into Executive Summary ---
+```
+
+Los resúmenes se apilan en el módulo *2. Executive Summary*, separados por `== RESUMEN ==`. En cada `Send`, Cortex ensambla el prompt maestro así:
+
+1. **Absolute Premises** (reglas, primero siempre).
+2. **Executive Summary** (memoria comprimida, los bloques más recientes primero).
+3. **Historial reciente** (los mensajes sin resumir).
+
+Si el espacio se agota, se descartan los resúmenes más antiguos — nunca se corta a la mitad, manteniendo la estabilidad del prompt.
+
+### Edición manual y Force Sync
+El resumen es **editable**: si la IA omitió un detalle o resumió mal, corrígelo a mano — tus ediciones se inyectan en el siguiente prompt. El botón **Force Sync** fuerza una síntesis inmediata del historial pendiente.
+
+### Configuración fina
+En **⚙️ Settings** puedes ajustar el umbral de auto-resumen, el presupuesto de entrada de la síntesis y la longitud mínima del resumen.
+
+---
+
+## 6. Sesiones
+
+### Autoguardado invisible
+No existe botón "Guardar": en el momento en que envías tu primer mensaje se crea una sesión y desde entonces **todo se autoguarda** en tu navegador (IndexedDB): historial, premisas, IMAGINER, resumen, scratchpad y archive.
+
+### La lista de sesiones (panel derecho)
+- **Título automático** — la sesión se bautiza con las primeras palabras de tu primer mensaje (`[N] …`).
+- **✏️ Rename** — dale un nombre reconocible ("Debate sobre IAs", "Ideas del fin de semana").
+- **✨ New** — lienzo en blanco para un tema nuevo (tu sesión anterior queda guardada en la lista).
+- **🔄** — nueva sesión en blanco *manteniendo* el agente actual (ver sección 3).
+- **Clic en una sesión** — la recuperas al instante, con todo el contexto, como si no hubiera pasado un segundo.
+- **🗑️ Delete** — elimina la sesión seleccionada definitivamente.
+
+### 💾 Exportar una sesión
+Descarga un JSON completo: historial, premisas, IMAGINER, resumen, scratchpad y archive. Ideal para copias de seguridad o migración.
+
+### 📂 Importar
+Acepta tanto **sesiones** como **plantillas de agentes** (los detecta automáticamente). La sesión importada se añade como nueva, sin sobrescribir nada.
+
+### 🔗 Compartir entre dispositivos (Share)
+El botón **🔗 Share** publica la sesión actual en un enlace permanente:
+
+```
+https://perchance.org/seven-cortex-gem-v5?import=<shareName>
+```
+
+Abre ese enlace en **cualquier dispositivo** y la sesión se importa a la base de datos local de ese dispositivo. El enlace se copia al portapapeles. La sesión compartida nunca sobrescribe sesiones existentes.
+
+### Reabrir la última sesión
+Por defecto, al volver a abrir el generador se reabre automáticamente la última sesión activa (se puede desactivar en ⚙️ Settings).
+
+---
+
+## 7. Session Archive
+
+Es la **versión histórica fiel** de la conversación, distinta del historial dinámico:
+
+- Guarda una **copia numerada y secuencial** de cada respuesta de la IA, etiquetada con la pregunta del usuario (`USER`) que la provocó — **tal como sucedió**, sin resúmenes ni compresión.
+- **No se envía al modelo** — es un registro puro.
+- Sirve para copiar o exportar la salida completa de la sesión.
+
+Desde el módulo *Session Archive* (botón **Show**) puedes:
+
+- **📋 Copy all** — copiar toda la conversación.
+- **⬇️ Export all** — descargar la conversación completa como texto plano.
+- **⬇️ Export responses only** — descargar **solo las respuestas de la IA** (sin las preguntas). Útil, por ejemplo, si eres un storyteller y quieres únicamente la narración final, limpia, sin el texto original comprimido.
+
+---
+
+## 8. Scratchpad (Private)
+
+Tu bloc de notas privado dentro de la sesión. El texto aquí **jamás se envía a la IA** ni entra en el contexto. Úsalo para enlaces, ideas temporales o notas de trabajo. Se autoguarda con la sesión.
+
+---
+
+## 9. Configuración
+
+### Pestaña General
+- **Auto-summarize trigger (tokens)** — umbral que dispara la compresión del historial (por defecto 1500).
+- **Synthesis input budget (tokens)** — presupuesto de tokens para la llamada de síntesis (por defecto 5000).
+- **Minimum summary length (chars)** — longitud mínima para aceptar un resumen nuevo (por defecto 20).
+- **Reopen last session** — reabrir la última sesión al abrir el generador (por defecto activado).
+- **Restore defaults** — vuelve a los valores por defecto.
+- Estadísticas de uso de la base de datos local.
+
+### Zona de peligro
+- **Delete all sessions** — borra todas las sesiones (primero descarga automáticamente una copia de seguridad de todo).
+- **Full reset** — borra la base de datos completa y los ajustes. Debes escribir `RESET` para confirmar.
+
+---
+
+## 10. Preguntas frecuentes
+
+**¿Dónde se guardan mis datos?**
+Localmente, en tu navegador (IndexedDB). No dependen de servidores externos. El único uso de servidor es el enlace **Share** (para transferir una sesión entre dispositivos) y, por supuesto, las llamadas al LLM y la generación de imágenes.
+
+**¿Cortex pierde el hilo en conversaciones largas?**
+No. El resumen ejecutivo comprime el pasado y mantiene la coherencia. Con límite de tokens tienes todos los sistemas (todo sistema tiene su límite), pero Cortex lo estira al máximo.
+
+**¿Puedo cambiar de personalidad sin perder el contexto?**
+Sí. Cambia la Absolute Premise y el siguiente `Send` ya usa las nuevas reglas; la memoria de la sesión se conserva.
+
+**¿Sirve para historias?**
+Sí. El Session Archive con *Export responses only* te da la narración final limpia, y el IMAGINER te genera los prompts visuales de tus escenas.
+
+**¿Puedo llevar mi configuración a otro dispositivo?**
+Exporta tus **agentes** (🗂️ → Export) y/o la **sesión** (💾 Export) como JSON e impórtalos donde quieras. O usa el enlace **🔗 Share** para mover una sesión completa.
+
+---
+
+## 11. Arquitectura técnica
+
+Cortex es un generador de Perchance. El código vive en `index.html` (una sola aplicación IIFE) y `main.pjs` (imports de plugins y metadatos).
+
+### Persistencia
+- **IndexedDB** (`CortexDB`) — base de datos local: `sessions` y `premiseTemplates`.
+- **localStorage** — ajustes (`cortexSettings`), última sesión activa, estado del panel retráctil.
+- **Editable uploads** (upload-plugin) — publicación del enlace **Share**; cada enlace se lee con `?import=<name>` y se importa como sesión nueva.
+
+### Plugins de Perchance usados
+- `ai-text-plugin` — motor del LLM (chat con streaming, síntesis de resúmenes en silencio).
+- `text-to-image-plugin` — generación de imágenes del IMAGINER.
+- `upload-plugin` — publicación de enlaces Share.
+- `super-fetch-plugin` — respaldo de red para leer el README / enlaces Share sin CORS.
+
+### Módulos principales (objetos)
+| Objeto | Responsabilidad |
+|---|---|
+| `State` | Estado global (sesión activa, historial, ajustes de tokens) |
+| `DB_Service` | Capa de datos IndexedDB |
+| `Session_Manager` | Ciclo de vida de sesiones: crear, listar, renombrar, exportar, importar, compartir |
+| `Premise_Manager` | Gestor de plantillas de agentes (Absolute Premises e IMAGINER) |
+| `LLM_Service` | Llamadas al modelo, streaming, watchdog de inactividad |
+| `Memory_Manager` | Termómetro, síntesis de resúmenes, ventana de contexto |
+| `Image_Handler` | IMAGINER: prompts visuales, generación, metadatos PNG |
+| `UI_Handlers` | Render del chat (markdown), archive, scroll, panel retráctil |
+| `Config_Manager` | Ajustes de usuario y persistencia |
+
+### Cómo funciona el prompt maestro (por turno)
+```
+1. Absolute Premises      ← reglas, primero y siempre
+2. Executive Summary      ← memoria comprimida (bloques más recientes primero)
+3. Historial reciente     ← mensajes sin resumir
+```
+El presupuesto se reparte con una ventana "más reciente primero": si no cabe todo, se descartan los bloques de resumen más antiguos, nunca se parte un mensaje a la mitad.
+
+### Seguridad / saneado
+- Las respuestas del modelo se renderizan como **markdown** (`marked`), pero todo HTML crudo se escapa — una instrucción inyectada en la salida del LLM no se ejecuta.
+- El **Scratchpad** y el **Session Archive** nunca se envían al modelo.
+
+### Documentación en vivo
+El botón **📖 Docs** descarga este mismo README desde `https://raw.githubusercontent.com/lcarrillo1969/Cortex/main/README.md` y lo renderiza dentro de la app, de modo que la documentación del repositorio y la del generador siempre coinciden.
+
+---
+
+*Cortex: un cerebro externo que gestiona la logística — almacenamiento, contexto, formato y optimización de tokens — para que la inteligencia artificial se dedique a razonar.*
